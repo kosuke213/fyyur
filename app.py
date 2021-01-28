@@ -102,21 +102,18 @@ def index():
 
 @app.route('/venues')
 def venues():
-  areas = db.session.query(Venue.city, Venue.state).distinct(Venue.city, Venue.state)
+  venues = Venue.query.all()
   data = []
-  for area in areas:
-    areas = Venue.query.filter_by(state=area.state).filter_by(city=area.city).all()
-    venue_data = []
-    for venue in areas:
-      venue_data.append({
-        'id':venue.id,
-        'name':venue.name,
-      })
-      data.append({
-        'city':area.city,
-        'state':area.state,
-        'venues':venue_data
-      })
+  for area in Venue.query.distinct(Venue.city, Venue.state).all():
+    data.append({
+      'city': area.city,
+      'state': area.state,
+      'venues':[{
+        'id': venue.id,
+        'name': venue.name,
+      } for venue in venues if
+                 venue.city == area.city and venue.state == area.state]
+    })
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
   
@@ -201,7 +198,7 @@ def create_venue_submission():
     )
     db.session.add(new_venue)
     db.session.commit()
-    flash('Venue ' + request.form('name') + ' was successfully listed!')
+    flash('Venue ' + request.form['name'] + ' was successfully listed!')
   except:
     db.session.rollback()
     flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
